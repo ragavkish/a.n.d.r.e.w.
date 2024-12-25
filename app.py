@@ -1,40 +1,41 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
+from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
-import os
-from model import GPTLanguageModel
 
 app = Flask(__name__)
 CORS(app)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-model = GPTLanguageModel()
-model.load_state_dict(torch.load("model.pth", map_location=device))
+model_name = "distilgpt2"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name).to(device)
 model.eval()
-model.to(device)
 
-itos = {...}
-stoi = {...}
-
-def decode(sequence):
-    return ''.join([itos[i] for i in sequence])
-
-def encode(sequence):
-    return [stoi[c] for c in sequence]
+@app.route('/')
+def home():
+    return render_template('chatbot.html')
 
 @app.route('/generate', methods=['POST'])
 def generate_text():
     data = request.json
     input_text = data.get('prompt', '')
 
-    # Encode the input text
-    input_ids = torch.tensor([encode(input_text)], dtype=torch.long, device=device)
+    input_ids = tokenizer.encode(input_text, return_tensors="pt").to(device)
 
-    # Generate response
     with torch.no_grad():
-        output = model.generate(input_ids, max_new_tokens=100)
-    response_text = decode(output[0].tolist())
+        output = model.generate(
+            input_ids,
+            max_length=150,
+            num_return_sequences=1,
+            do_sample=True,
+            top_k=50,
+            top_p=0.95,
+            temperature=0.7
+        )
+
+    response_text = tokenizer.decode(output[0], skip_special_tokens=True)
 
     return jsonify({'response': response_text.strip()})
 
