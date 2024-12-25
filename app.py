@@ -15,7 +15,7 @@ model.eval()
 
 @app.route('/')
 def home():
-    return render_template('chatbot.html')
+    return render_template('a.n.d.r.e.w.html')
 
 @app.route('/generate', methods=['POST'])
 def generate_text():
