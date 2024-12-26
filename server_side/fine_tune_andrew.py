@@ -1,9 +1,12 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer
 from datasets import Dataset
+import gc
+import os
+import shutil
 
-model = AutoModelForCausalLM.from_pretrained("./models/anderson")
-tokenizer = AutoTokenizer.from_pretrained("./models/anderson")
+model = AutoModelForCausalLM.from_pretrained("Z:/kizX/dataset/models/anderson")
+tokenizer = AutoTokenizer.from_pretrained("Z:/kizX/dataset/models/anderson")
 
 def fine_tune_model(new_data):
     dataset = Dataset.from_dict(new_data)
@@ -21,7 +24,7 @@ def fine_tune_model(new_data):
     )
     
     training_args = TrainingArguments(
-        output_dir="Z:/kizX/dataset/models/anderson",
+        output_dir="Z:/kizX/dataset/models/anderson_temp",
         per_device_train_batch_size=2,
         num_train_epochs=1,
         save_steps=10,
@@ -37,8 +40,27 @@ def fine_tune_model(new_data):
     )
     
     trainer.train()
-    model.save_pretrained("Z:/kizX/dataset/models/anderson")
-    tokenizer.save_pretrained("Z:/kizX/dataset/models/anderson")
+    
+    del trainer
+    torch.cuda.empty_cache()
+    gc.collect()
+
+    model.cpu()
+
+    temp_dir = "Z:/kizX/dataset/models/anderson_temp"
+    save_dir = "Z:/kizX/dataset/models/anderson"
+
+    if not os.path.exists(temp_dir):
+        os.makedirs(temp_dir)
+
+    model.save_pretrained(temp_dir)
+    tokenizer.save_pretrained(temp_dir)
+
+    if os.path.exists(save_dir):
+        shutil.rmtree(save_dir)
+    shutil.move(temp_dir, save_dir)
+
+    print(f"Model saved to {save_dir}")
 
 while True:
     user_input = input("You: ")
