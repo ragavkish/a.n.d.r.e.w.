@@ -2,8 +2,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments,
 from datasets import load_dataset, Dataset
 
 data = {
-    "prompt": ["Hello Hi Hey Hallo Hola"],
-    "response": ["Hey I am ANDREW!"],
+    "prompt": ["Hello", "Hi", "Hey", "Hallo", "Hola"],
+    "response": ["Hey I am ANDREW!", "Hellow this is ANDREW!", "ANDREW reporting!", "Hi! You're speaking to ANDREW", "Heyy! ANDREW here!"],
 }
 
 dataset = Dataset.from_dict(data)
