@@ -21,7 +21,7 @@ def fine_tune_model(new_data):
     )
     
     training_args = TrainingArguments(
-        output_dir="./models/anderson",
+        output_dir="Z:/kizX/dataset/models/anderson",
         per_device_train_batch_size=2,
         num_train_epochs=1,
         save_steps=10,
@@ -37,8 +37,8 @@ def fine_tune_model(new_data):
     )
     
     trainer.train()
-    model.save_pretrained("./models/anderson")
-    tokenizer.save_pretrained("./models/anderson")
+    model.save_pretrained("Z:/kizX/dataset/models/anderson")
+    tokenizer.save_pretrained("Z:/kizX/dataset/models/anderson")
 
 while True:
     user_input = input("You: ")

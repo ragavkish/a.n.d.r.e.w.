@@ -2,8 +2,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments,
 from datasets import load_dataset, Dataset
 
 data = {
-    "prompt": ["Hello, who are you?", "What's the weather?"],
-    "response": ["I'm your assistant, here to help!", "It's sunny with a high of 75°F."],
+    "prompt": ["Hello Hi Hey Hallo Hola"],
+    "response": ["Hey I am ANDREW!"],
 }
 
 dataset = Dataset.from_dict(data)
@@ -32,9 +32,9 @@ model = AutoModelForCausalLM.from_pretrained("distilgpt2")
 model.resize_token_embeddings(len(tokenizer))
 
 training_args = TrainingArguments(
-    output_dir="models/anderson",
+    output_dir="Z:/kizX/dataset/models/anderson",
     eval_strategy="steps",
-    logging_dir="models/logs",
+    logging_dir="Z:/kizX/dataset/models/logs",
     per_device_train_batch_size=4,
     per_device_eval_batch_size=4,
     num_train_epochs=3,
@@ -56,8 +56,8 @@ trainer = Trainer(
 
 trainer.train()
 
-model.save_pretrained("./models/anderson")
-tokenizer.save_pretrained("./models/anderson")
+model.save_pretrained("Z:/kizX/dataset/models/anderson")
+tokenizer.save_pretrained("Z:/kizX/dataset/models/anderson")
 
-model = AutoModelForCausalLM.from_pretrained("./models/anderson")
-tokenizer = AutoTokenizer.from_pretrained("./models/anderson")
+model = AutoModelForCausalLM.from_pretrained("Z:/kizX/dataset/models/anderson")
+tokenizer = AutoTokenizer.from_pretrained("Z:/kizX/dataset/models/anderson")
