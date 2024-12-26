@@ -6,7 +6,6 @@ def create_app():
     app = Flask(__name__)
     CORS(app)
 
-    # Initialize routes
     init_routes(app)
 
     return app
