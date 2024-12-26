@@ -4,74 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chatbot</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .chat-container {
-            width: 400px;
-            background: #fff;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .chat-header {
-            background: #0078d7;
-            color: #fff;
-            padding: 10px;
-            text-align: center;
-            font-size: 18px;
-        }
-        .chat-body {
-            padding: 10px;
-            height: 300px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
-        .message {
-            margin: 5px 0;
-            padding: 10px;
-            border-radius: 8px;
-            max-width: 70%;
-        }
-        .user-message {
-            background: #0078d7;
-            color: #fff;
-            align-self: flex-end;
-        }
-        .bot-message {
-            background: #f0f0f0;
-            color: #000;
-            align-self: flex-start;
-        }
-        .chat-footer {
-            display: flex;
-            padding: 10px;
-            border-top: 1px solid #ddd;
-        }
-        .chat-footer input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-        }
-        .chat-footer button {
-            padding: 10px 15px;
-            background: #0078d7;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            margin-left: 10px;
-        }
-    </style>
+    <link rel="stylesheet" href="static\css\a.n.d.r.e.w.css">
 </head>
 <body>
     <div class="chat-container">
@@ -82,34 +15,6 @@
             <button onclick="sendMessage()">Send</button>
         </div>
     </div>
-
-    <script>
-        const chatBody = document.getElementById('chatBody');
-        const userInput = document.getElementById('userInput');
-
-        function appendMessage(text, isUser) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
-            messageDiv.textContent = text;
-            chatBody.appendChild(messageDiv);
-            chatBody.scrollTop = chatBody.scrollHeight;
-        }
-
-        async function sendMessage() {
-            const message = userInput.value.trim();
-            if (!message) return;
-
-            appendMessage(message, true);
-            userInput.value = '';
-
-            const response = await fetch('http://127.0.0.1:5000/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: message }),
-            });
-            const data = await response.json();
-            appendMessage(data.response, false);
-        }
-    </script>
+    <script src="static/js/a.n.d.r.e.w.js"></script>
 </body>
 </html>
