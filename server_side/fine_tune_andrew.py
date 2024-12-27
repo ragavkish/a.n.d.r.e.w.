@@ -62,8 +62,8 @@ def fine_tune_model(new_data):
 
     print(f"Model saved to {save_dir}")
 
-target_responses = ["hey I am ANDREW!", "hi I am ANDREW!", "hello I am ANDREW!"]
-trigger_inputs = ["hi", "hey", "hello"]
+target_responses = ["hey I am ANDREW!", "hi I am ANDREW!", "hello I am ANDREW!", "Hey I am ANDREW!", "Hellow this is ANDREW!", "ANDREW reporting!", "Hi! You're speaking to ANDREW", "Heyy! ANDREW here!"]
+trigger_inputs = ["hi", "hey", "hello", "Hello", "Hi", "Hey", "Hallo", "Hola"]
 
 while True:
     user_input = trigger_inputs[0]
