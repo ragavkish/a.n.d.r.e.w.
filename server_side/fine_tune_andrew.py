@@ -62,25 +62,26 @@ def fine_tune_model(new_data):
 
     print(f"Model saved to {save_dir}")
 
-while True:
-    user_input = input("You: ")
-    if user_input.lower() == "exit":
-        print("Exiting chat.")
-        break
+target_responses = ["hey I am ANDREW!", "hi I am ANDREW!", "hello I am ANDREW!"]
+trigger_inputs = ["hi", "hey", "hello"]
 
-    expected_output = input("Expected Output: ")
-    
+while True:
+    user_input = trigger_inputs[0]
     inputs = tokenizer(user_input, return_tensors="pt").to(model.device)
     outputs = model.generate(**inputs, max_length=50, pad_token_id=tokenizer.pad_token_id)
     response = tokenizer.decode(outputs[0], skip_special_tokens=True)
     
     print(f"Model: {response}")
     
-    fine_tune = input("Fine-tune with this example? (yes/no): ").lower()
-    if fine_tune == "yes":
-        new_data = {
-            "prompt": [user_input],
-            "response": [expected_output]
-        }
-        fine_tune_model(new_data)
-        print("Model fine-tuned with the new example!")
+    if response.strip().lower() in target_responses:
+        print("Success: Model returned the expected response!")
+        break
+    
+    print("Fine-tuning the model...")
+    
+    new_data = {
+        "prompt": [user_input],
+        "response": [target_responses[0]]
+    }
+    fine_tune_model(new_data)
+    print("Model fine-tuned with the new example!")
