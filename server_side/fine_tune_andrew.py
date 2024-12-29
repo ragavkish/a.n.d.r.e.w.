@@ -78,6 +78,12 @@ while True:
         break
     
     print("Fine-tuning the model...")
+
+    if response not in target_responses:
+        target_responses.append(response)
+    
+    if user_input not in trigger_inputs:
+        trigger_inputs.append(user_input)
     
     new_data = {
         "prompt": [user_input],
