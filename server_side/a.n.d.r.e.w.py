@@ -1,5 +1,9 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer
 from datasets import load_dataset, Dataset
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 data = {
     "prompt": ["Hello", "Hi", "Hey", "Hallo", "Hola"],
@@ -9,7 +13,7 @@ data = {
 dataset = Dataset.from_dict(data)
 
 def format_data(example):
-    return {"text": f"{example['prompt']} {example['response']}"}
+    return {"text": f"Prompt: {example['prompt']} Response: {example['response']}"}
 
 formatted_dataset = dataset.map(format_data, remove_columns=["prompt", "response"])
 
@@ -20,13 +24,27 @@ eval_dataset = train_test_split["test"]
 tokenizer = AutoTokenizer.from_pretrained("distilgpt2")
 tokenizer.add_special_tokens({'pad_token': '[PAD]'})
 
-def tokenize_data_with_labels(example):
-    tokenized = tokenizer(example["text"], truncation=True, padding="max_length", max_length=128)
-    tokenized["labels"] = tokenized["input_ids"].copy()
-    return tokenized
+def tokenize_dataset(dataset, tokenizer, max_length=128):
+    return dataset.map(
+        lambda x: {
+            **tokenizer(
+                x["text"], 
+                truncation=True, 
+                padding="max_length", 
+                max_length=max_length
+            ),
+            "labels": tokenizer(
+                x["text"], 
+                truncation=True, 
+                padding="max_length", 
+                max_length=max_length
+            )["input_ids"],
+        },
+        batched=True
+    )
 
-tokenized_train_dataset = train_dataset.map(tokenize_data_with_labels, batched=True)
-tokenized_eval_dataset = eval_dataset.map(tokenize_data_with_labels, batched=True)
+tokenized_train_dataset = tokenize_dataset(train_dataset, tokenizer)
+tokenized_eval_dataset = tokenize_dataset(eval_dataset, tokenizer)
 
 model = AutoModelForCausalLM.from_pretrained("distilgpt2")
 model.resize_token_embeddings(len(tokenizer))
@@ -54,8 +72,10 @@ trainer = Trainer(
     tokenizer=tokenizer,
 )
 
+logger.info("Starting training...")
 trainer.train()
 
+logger.info("Saving the model and tokenizer...")
 model.save_pretrained("Z:/kizX/dataset/models/anderson")
 tokenizer.save_pretrained("Z:/kizX/dataset/models/anderson")
 

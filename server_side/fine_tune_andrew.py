@@ -1,12 +1,27 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer
 from datasets import Dataset
+from sentence_transformers import SentenceTransformer, util
 import gc
 import os
 import shutil
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 model = AutoModelForCausalLM.from_pretrained("Z:/kizX/dataset/models/anderson")
 tokenizer = AutoTokenizer.from_pretrained("Z:/kizX/dataset/models/anderson")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model.to(device)
+
+similarity_model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
+
+def is_response_valid(response, target_responses, threshold=0.8):
+    response_embedding = similarity_model.encode(response)
+    target_embeddings = similarity_model.encode(target_responses)
+    cosine_scores = util.pytorch_cos_sim(response_embedding, target_embeddings)
+    return cosine_scores.max().item() > threshold
 
 def fine_tune_model(new_data):
     dataset = Dataset.from_dict(new_data)
@@ -39,6 +54,7 @@ def fine_tune_model(new_data):
         tokenizer=tokenizer
     )
     
+    logger.info("Fine-tuning the model...")
     trainer.train()
     
     del trainer
@@ -50,38 +66,35 @@ def fine_tune_model(new_data):
     temp_dir = "Z:/kizX/dataset/models/anderson_temp"
     save_dir = "Z:/kizX/dataset/models/anderson"
 
-    if not os.path.exists(temp_dir):
-        os.makedirs(temp_dir)
-
-    model.save_pretrained(temp_dir)
-    tokenizer.save_pretrained(temp_dir)
-
     if os.path.exists(save_dir):
+        logger.info(f"Removing existing directory at {save_dir}...")
         shutil.rmtree(save_dir)
-    shutil.move(temp_dir, save_dir)
 
-    print(f"Model saved to {save_dir}")
+    logger.info(f"Moving {temp_dir} to {save_dir}...")
+    shutil.move(temp_dir, save_dir)
+    logger.info(f"Model saved to {save_dir}")
 
 target_responses = ["hey I am ANDREW!", "hi I am ANDREW!", "hello I am ANDREW!", "Hey I am ANDREW!", "Hellow this is ANDREW!", "ANDREW reporting!", "Hi! You're speaking to ANDREW", "Heyy! ANDREW here!"]
 trigger_inputs = ["hi", "hey", "hello", "Hello", "Hi", "Hey", "Hallo", "Hola"]
 
-while True:
-    user_input = trigger_inputs[0]
-    inputs = tokenizer(user_input, return_tensors="pt").to(model.device)
+max_iterations = 5
+iteration = 0
+
+while iteration < max_iterations:
+    user_input = trigger_inputs[iteration % len(trigger_inputs)]
+    inputs = tokenizer(user_input, return_tensors="pt").to(device)
     outputs = model.generate(**inputs, max_length=50, pad_token_id=tokenizer.pad_token_id)
     response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    
-    print(f"Model: {response}")
-    
-    if response.strip().lower() in target_responses:
-        print("Success: Model returned the expected response!")
+    logger.info(f"Model response: {response}")
+
+    if is_response_valid(response, target_responses):
+        logger.info("Success: Model returned the expected response!")
         break
-    
-    print("Fine-tuning the model...")
-    
-    new_data = {
-        "prompt": [user_input],
-        "response": [target_responses[0]]
-    }
+
+    logger.info("Fine-tuning the model with new data...")
+    new_data = {"prompt": [user_input], "response": [target_responses[0]]}
     fine_tune_model(new_data)
-    print("Model fine-tuned with the new example!")
+    iteration += 1
+
+if iteration == max_iterations:
+    logger.warning("Model failed to converge after maximum iterations.")
