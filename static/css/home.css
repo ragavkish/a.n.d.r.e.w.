@@ -1,0 +1,104 @@
+body {
+    background-color: black;
+    margin: 0;
+    font-family: 'VANTEQU', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+header {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+header h1 {
+    color: rgb(255, 255, 0);
+    text-align: center;
+    font-family: 'VANTEQU', sans-serif;
+    font-size: 10rem;
+    font-weight: 50;
+    margin: 0;
+}
+
+header .login, header .admin {
+    text-decoration: none;
+    font-size: 2.0rem;
+    font-family: 'WANDERER', sans-serif;
+    font-weight: bold;
+    padding: 10px 20px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+header .login {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: black;
+    background-color: #E64027;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+header .login:hover {
+    background-color: black;
+    color: #E64027;
+}
+
+header .admin-container {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+header .admin {
+    color: black;
+    background-color: #E64027;
+    padding: 10px 20px;
+    font-size: 2.0rem;
+    font-family: 'WANDERER', sans-serif;
+    font-weight: bold;
+    border-radius: 5px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+header .smiley {
+    color: yellow;
+    font-size: 2rem;
+    transition: opacity 0.3s ease;
+}
+
+header .admin-container:hover .admin {
+    opacity: 1;
+    visibility: visible;
+}
+
+header .admin-container:hover .smiley {
+    opacity: 0;
+}
+
+@font-face {
+    font-family: 'VANTEQU';
+    src: url('/static/fonts/VANTEQU.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'WANDERER';
+    src: url('/static/fonts/WANDERER.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
