@@ -1,0 +1,137 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #000;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    position: relative;
+}
+
+.signup-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    background-color: #111;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+h2 {
+    font-family: 'Gantians', sans-serif;
+    font-size: 40px;
+    color: #BEFA4F;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+label {
+    font-family: 'Decterm', sans-serif;
+    font-size: 18px;
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+input {
+    padding: 10px;
+    font-family: 'Monospace821', monospace;
+    font-size: 16px;
+    color: #fff;
+    background-color: #222;
+    border: 2px solid #4CAF50;
+    border-radius: 5px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+input:focus {
+    border-color: #BEFA4F;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #db3525;
+    color: black;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: bold;
+    font-family: 'Wanderer', sans-serif;
+    text-align: center;
+}
+
+button:hover {
+    background-color: black;
+    color: #db3525;
+}
+
+a {
+    color: #4CAF50;
+    text-decoration: none;
+    font-family: 'Wanderer', sans-serif;
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 10px;
+    text-align: center;
+}
+
+a:hover {
+    color: #BEFA4F;
+}
+
+.page-title {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Gantians', sans-serif;
+    font-size: 40px;
+    font-weight: bold;
+    color: #BEFA4F;
+    text-align: center;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+@font-face {
+    font-family: 'Gantians';
+    src: url('/static/fonts/Gantians.otf') format('opentype');
+}
+
+@font-face {
+    font-family: 'Wanderer';
+    src: url('/static/fonts/WANDERER.otf') format('opentype');
+}
+
+@font-face {
+    font-family: 'Decterm';
+    src: url('/static/fonts/DECTERM.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'FlexiVGA';
+    src: url('/static/fonts/FLEXIVGA.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Monospace821';
+    src: url('/static/fonts/MONOSPACE821.TTF') format('truetype');
+}
