@@ -1,0 +1,214 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #000;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100vh;
+    position: relative;
+}
+
+.login-container {
+    margin-left: 20px;
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.form-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    width: 100%;
+}
+
+.label-static {
+    font-family: 'Decterm', sans-serif;
+    font-size: 30px;
+    color: #4CAF50;
+    font-weight: bold;
+    text-align: left;
+    flex-basis: 120px;
+    min-width: 120px;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.input-container {
+    flex-grow: 1;
+    display: flex;
+    gap: 5px;
+    overflow: visible;
+    position: relative;
+    margin-left: 10px;
+}
+
+.input-box {
+    width: 30px;
+    height: 40px;
+    flex-shrink: 0;
+    border: none;
+    border-bottom: 2px solid #4CAF50;
+    background: transparent;
+    text-align: center;
+    color: #fff;
+    font-family: 'Monospace821', monospace;
+    font-size: 27px;
+    outline: none;
+    position: relative;
+    -webkit-text-security: disc;
+}
+
+.input-box:empty::after {
+    content: '_';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #4CAF50;
+    animation: blink 1s step-end infinite;
+}
+
+.input-box:not(:empty)::after {
+    content: '';
+}
+
+@keyframes blink {
+    50% {
+        opacity: 0;
+    }
+}
+
+#enter-button {
+    position: fixed;
+    bottom: 150px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 20px;
+    background-color: #db3525;
+    color: black;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 30px;
+    font-weight: bold;
+    font-family: 'Wanderer', sans-serif;
+    text-align: center;
+}
+
+#enter-button:hover {
+    background-color: black;
+    color: #db3525;
+}
+
+.top-right-buttons {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.top-button {
+    padding: 10px 20px;
+    background-color: #db3525;
+    color: black;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 25px;
+    font-weight: bold;
+    font-family: 'Wanderer', sans-serif;
+    text-align: center;
+    text-decoration: none;
+}
+
+.top-button:hover {
+    background-color: black;
+    color: #db3525;
+}
+
+.page-title {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Gantians', sans-serif;
+    font-size: 40px;
+    font-weight: bold;
+    color: #BEFA4F;
+    text-align: center;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.top-left-icon {
+    position: absolute;
+    top: 20px;
+    font-size: 48px;
+    fill: #db3525;
+    transition: fill 0.3s ease;
+    left: 20px;
+}
+
+.top-left-icon:hover {
+    fill: white
+}
+
+.show-pass-button {
+    margin-top: -10px;
+    margin-left: 10px;
+    padding: 1px;
+    background-color: black;
+    color: #64AEF6;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 17px;
+    font-weight: bold;
+    font-family: 'Courier New', Courier, monospace;
+    text-align: center;
+    width: 120px;
+}
+
+.show-pass-button:hover {
+    background-color: #64AEF6;
+    color: black;
+}
+
+@font-face {
+    font-family: 'Gantians';
+    src: url('/static/fonts/Gantians.otf') format('opentype');
+}
+@font-face {
+    font-family: 'Wanderer';
+    src: url('/static/fonts/WANDERER.otf') format('opentype');
+}
+
+@font-face {
+    font-family: 'Decterm';
+    src: url('/static/fonts/DECTERM.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'FlexiVGA';
+    src: url('/static/fonts/FLEXIVGA.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Monospace821';
+    src: url('/static/fonts/MONOSPACE821.TTF') format('truetype');
+}
