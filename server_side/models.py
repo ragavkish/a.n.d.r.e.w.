@@ -1,13 +1,21 @@
-import pydoop.hdfs as hdfs
+from google.cloud import bigquery
+import os
 
-HDFS_HOST = "hdfs://localhost:9000"
-HDFS_USER = "your_hadoop_user"
-HDFS_PATH = "/user/signup_data.txt"
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = r"Z:/kizX/environments/andrew_env/json/andrew-chronix-d6972bcec0a9.json"
 
-def save_user_data(name, email):
+client = bigquery.Client()
+
+def execute_query(query: str):
     """
-    Save user data to HDFS.
+    Executes a SQL query on BigQuery and returns the results.
+
+    :param query: The SQL query string.
+    :return: Query results as a list of dictionaries.
     """
-    user_data = f"{name},{email}\n"
-    with hdfs.open(HDFS_PATH, "at", user=HDFS_USER) as f:
-        f.write(user_data)
+    try:
+        query_job = client.query(query)
+        results = query_job.result()
+        return [dict(row) for row in results]
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
