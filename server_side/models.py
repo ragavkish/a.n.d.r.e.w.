@@ -12,7 +12,7 @@ def create_user(username, name, email_id, password):
 
     rows_to_insert = [{
         "username": username,
-        "name": [name],
+        "name": name,
         "email_id": email_id,
         "password": hashed_password
     }]
