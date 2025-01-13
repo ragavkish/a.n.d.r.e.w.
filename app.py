@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_mail import Mail
 from flask_dance.contrib.google import make_google_blueprint
+from flask_dance.consumer import oauth_authorized
 from server_side.routes import init_routes
 import os
 from dotenv import load_dotenv
@@ -16,7 +17,7 @@ def create_app():
     google_bp = make_google_blueprint(
         client_id=app.config["GOOGLE_OAUTH_CLIENT_ID"],
         client_secret=app.config["GOOGLE_OAUTH_CLIENT_SECRET"],
-        redirect_to="google_login_callback",
+        redirect_to="http://127.0.0.1:5000/google_login/callback",
     )
     app.register_blueprint(google_bp, url_prefix="/google_login")
 

@@ -2,6 +2,7 @@ from flask import render_template, request, redirect, url_for, flash, session
 from flask_mail import Message
 from server_side.models import create_user, authenticate_user
 import random
+from flask_dance.contrib.google import google
 
 def init_routes(app, mail):
     @app.route('/')
@@ -31,6 +32,7 @@ def init_routes(app, mail):
             password = request.form['password']
 
             if authenticate_user(email_id, password):
+                session['email'] = email_id
                 flash("Login successful!", "success")
                 return redirect(url_for('home'))
             else:
@@ -69,8 +71,16 @@ def init_routes(app, mail):
         resp = google.get("/oauth2/v2/userinfo")
         if resp.ok:
             user_info = resp.json()
-            session['email'] = user_info["email"]
-            flash(f"Welcome {user_info['email']}!", "success")
+            email = user_info["email"]
+            name = user_info["name"]
+
+            if create_user(email, name, email, None):
+                flash(f"Welcome {name}!", "success")
+            else:
+                flash(f"Welcome back, {name}!", "info")
+
+            session['email'] = email
             return redirect(url_for('home'))
+
         flash("Google Login Failed.", "danger")
         return redirect(url_for('login'))

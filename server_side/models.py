@@ -8,7 +8,7 @@ client = bigquery.Client()
 
 def create_user(username, name, email_id, password):
     table_id = "andrew-chronix.andrew_data.users"
-    hashed_password = generate_password_hash(password)
+    hashed_password = generate_password_hash(password) if password else None
 
     rows_to_insert = [{"username": username, "name": name, "email_id": email_id, "password": hashed_password}]
 
