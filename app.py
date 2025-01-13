@@ -1,6 +1,6 @@
-from flask import Flask, redirect, url_for, session, flash
-from flask_mail import Mail, Message
-from flask_dance.contrib.google import make_google_blueprint, google
+from flask import Flask
+from flask_mail import Mail
+from flask_dance.contrib.google import make_google_blueprint
 from server_side.routes import init_routes
 import os
 from dotenv import load_dotenv
@@ -20,11 +20,13 @@ def create_app():
     )
     app.register_blueprint(google_bp, url_prefix="/google_login")
 
-    app.config["MAIL_SERVER"] = "smtp.gmail.com"
-    app.config["MAIL_PORT"] = 587
-    app.config["MAIL_USE_TLS"] = True
-    app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
-    app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
+    app.config.update(
+        MAIL_SERVER="smtp.gmail.com",
+        MAIL_PORT=587,
+        MAIL_USE_TLS=True,
+        MAIL_USERNAME=os.getenv("MAIL_USERNAME"),
+        MAIL_PASSWORD=os.getenv("MAIL_PASSWORD"),
+    )
     mail = Mail(app)
 
     init_routes(app, mail)
