@@ -1,6 +1,6 @@
-from flask import Flask
-from flask_mail import Mail
-from flask_dance.contrib.google import make_google_blueprint
+from flask import Flask, redirect, url_for, session, flash
+from flask_mail import Mail, Message
+from flask_dance.contrib.google import make_google_blueprint, google
 from server_side.routes import init_routes
 import os
 from dotenv import load_dotenv
@@ -13,7 +13,11 @@ def create_app():
 
     app.config["GOOGLE_OAUTH_CLIENT_ID"] = os.getenv("GOOGLE_OAUTH_CLIENT_ID")
     app.config["GOOGLE_OAUTH_CLIENT_SECRET"] = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")
-    google_bp = make_google_blueprint(redirect_to="google_login")
+    google_bp = make_google_blueprint(
+        client_id=app.config["GOOGLE_OAUTH_CLIENT_ID"],
+        client_secret=app.config["GOOGLE_OAUTH_CLIENT_SECRET"],
+        redirect_to="google_login_callback",
+    )
     app.register_blueprint(google_bp, url_prefix="/google_login")
 
     app.config["MAIL_SERVER"] = "smtp.gmail.com"
@@ -26,6 +30,7 @@ def create_app():
     init_routes(app, mail)
 
     return app
+
 
 if __name__ == "__main__":
     app = create_app()

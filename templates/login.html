@@ -28,6 +28,11 @@
                 <label for="password">passcode:</label>
                 <input type="password" id="password" name="password" required>
             </div>
+            <div>
+                <a href="{{ url_for('google.login') }}">
+                    <button>Login with Google</button>
+                </a>
+            </div>
             <button type="submit">enter!</button>
         </form>        
     </div>
