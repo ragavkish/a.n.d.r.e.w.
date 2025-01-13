@@ -18,8 +18,9 @@ def init_routes(app, mail):
             password = request.form['password']
 
             if create_user(username, name, email_id, password):
-                flash("Signup successful! Please log in.", "success")
-                return redirect(url_for('login'))
+                session['email'] = email_id
+                flash("Signup successful! Redirecting...", "success")
+                return redirect(url_for('andrew'))
             else:
                 flash("Signup failed. Try again.", "danger")
 
@@ -33,8 +34,8 @@ def init_routes(app, mail):
 
             if authenticate_user(email_id, password):
                 session['email'] = email_id
-                flash("Login successful!", "success")
-                return redirect(url_for('home'))
+                flash("Login successful! Redirecting...", "success")
+                return redirect(url_for('andrew'))
             else:
                 flash("Invalid credentials. Try again.", "danger")
 
@@ -46,11 +47,16 @@ def init_routes(app, mail):
         otp = str(random.randint(100000, 999999))
         session['otp'] = otp
 
-        msg = Message('Your OTP Code', sender=app.config["MAIL_USERNAME"], recipients=[email])
-        msg.body = f'Your OTP is: {otp}'
-        mail.send(msg)
-        flash("OTP sent successfully!", "info")
-        return redirect(url_for('verify_otp'))
+        try:
+            msg = Message('Your OTP Code', sender=app.config["MAIL_USERNAME"], recipients=[email])
+            msg.body = f'Your OTP is: {otp}'
+            mail.send(msg)
+            flash("OTP sent successfully!", "info")
+            return redirect(url_for('verify_otp'))
+        except Exception as e:
+            print(f"Error sending OTP: {e}")
+            flash("Failed to send OTP. Please try again.", "danger")
+            return redirect(url_for('home'))
 
     @app.route('/verify_otp', methods=['GET', 'POST'])
     def verify_otp():
@@ -58,7 +64,7 @@ def init_routes(app, mail):
             user_otp = request.form['otp']
             if user_otp == session.get('otp'):
                 flash("OTP Verified Successfully!", "success")
-                return redirect(url_for('home'))
+                return redirect(url_for('andrew'))
             else:
                 flash("Invalid OTP. Try again.", "danger")
         return render_template('verify_otp.html')
@@ -80,7 +86,11 @@ def init_routes(app, mail):
                 flash(f"Welcome back, {name}!", "info")
 
             session['email'] = email
-            return redirect(url_for('home'))
+            return redirect(url_for('andrew'))
 
         flash("Google Login Failed.", "danger")
         return redirect(url_for('login'))
+
+    @app.route('/andrew')
+    def andrew():
+        return render_template('a.n.d.r.e.w.html')

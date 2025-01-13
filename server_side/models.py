@@ -10,13 +10,20 @@ def create_user(username, name, email_id, password):
     table_id = "andrew-chronix.andrew_data.users"
     hashed_password = generate_password_hash(password) if password else None
 
-    rows_to_insert = [{"username": username, "name": name, "email_id": email_id, "password": hashed_password}]
+    rows_to_insert = [{
+        "username": username,
+        "name": [name],
+        "email_id": email_id,
+        "password": hashed_password
+    }]
 
     try:
         errors = client.insert_rows_json(table_id, rows_to_insert)
+        if errors:
+            print(f"BigQuery Errors: {errors}")
         return errors == []
     except Exception as e:
-        print(f"Error creating user: {e}")
+        print(f"Error creating user in BigQuery: {e}")
         return False
 
 def authenticate_user(email_id, password):
