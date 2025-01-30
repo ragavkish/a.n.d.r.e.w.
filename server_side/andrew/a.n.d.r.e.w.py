@@ -50,9 +50,9 @@ model = AutoModelForCausalLM.from_pretrained("distilgpt2")
 model.resize_token_embeddings(len(tokenizer))
 
 training_args = TrainingArguments(
-    output_dir="Z:/kizX/dataset/models/anderson",
+    output_dir="Z:/kizX/dataset/andrew/models/anderson",
     eval_strategy="steps",
-    logging_dir="Z:/kizX/dataset/models/logs",
+    logging_dir="Z:/kizX/dataset/andrew/models/logs",
     per_device_train_batch_size=4,
     per_device_eval_batch_size=4,
     num_train_epochs=3,
@@ -76,8 +76,8 @@ logger.info("Starting training...")
 trainer.train()
 
 logger.info("Saving the model and tokenizer...")
-model.save_pretrained("Z:/kizX/dataset/models/anderson")
-tokenizer.save_pretrained("Z:/kizX/dataset/models/anderson")
+model.save_pretrained("Z:/kizX/dataset/andrew/models/anderson")
+tokenizer.save_pretrained("Z:/kizX/dataset/andrew/models/anderson")
 
-model = AutoModelForCausalLM.from_pretrained("Z:/kizX/dataset/models/anderson")
-tokenizer = AutoTokenizer.from_pretrained("Z:/kizX/dataset/models/anderson")
+model = AutoModelForCausalLM.from_pretrained("Z:/kizX/dataset/andrew/models/anderson")
+tokenizer = AutoTokenizer.from_pretrained("Z:/kizX/dataset/andrew/models/anderson")
