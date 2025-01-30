@@ -4,7 +4,7 @@ from datasets import load_dataset, Dataset
 import gc
 import os
 import shutil
-from peft import LoraConfig, get_peft_model, PeftModel
+from peft import LoraConfig, get_peft_model
 
 MODEL_PATH = "Z:/kizX/dataset/andrew/models/anderson"
 TEMP_PATH = "Z:/kizX/dataset/andrew/models/anderson_temp"
@@ -16,15 +16,22 @@ ds = load_dataset("OpenAssistant/oasst1")
 train_ds = ds["train"]
 val_ds = ds["validation"]
 
-def format_conversations(example):
-    if example["role"] == "user":
-        return {"prompt": example["text"], "response": ""}
-    elif example["role"] == "assistant":
-        return {"prompt": "", "response": example["text"]}
-    return None
+def extract_conversations(dataset):
+    """Pairs user prompts with assistant responses."""
+    conversations = []
+    last_user_message = None
 
-formatted_train_ds = train_ds.map(format_conversations, remove_columns=["message_id", "parent_id", "user_id", "created_date", "role", "lang", "review_count", "review_result", "deleted", "rank", "synthetic", "model_name", "detoxify", "message_tree_id", "tree_state", "emojis", "labels"])
-formatted_val_ds = val_ds.map(format_conversations, remove_columns=["message_id", "parent_id", "user_id", "created_date", "role", "lang", "review_count", "review_result", "deleted", "rank", "synthetic", "model_name", "detoxify", "message_tree_id", "tree_state", "emojis", "labels"])
+    for example in dataset:
+        if example["role"] == "user":
+            last_user_message = example["text"]
+        elif example["role"] == "assistant" and last_user_message:
+            conversations.append({"prompt": last_user_message, "response": example["text"]})
+            last_user_message = None
+
+    return Dataset.from_list(conversations)
+
+formatted_train_ds = extract_conversations(train_ds)
+formatted_val_ds = extract_conversations(val_ds)
 
 def tokenize_data(example):
     text = f"{example['prompt']} {example['response']}"
