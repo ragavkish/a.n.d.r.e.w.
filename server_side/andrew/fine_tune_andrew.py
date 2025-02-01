@@ -1,15 +1,18 @@
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer
-from datasets import load_dataset, Dataset
+import numpy as np
+import evaluate
 import gc
 import os
 import shutil
+from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer
+from datasets import load_dataset, Dataset
 from peft import LoraConfig, get_peft_model
 
 MODEL_PATH = "Z:/kizX/dataset/andrew/models/anderson"
 TEMP_PATH = "Z:/kizX/dataset/andrew/models/anderson_temp"
 
-model = AutoModelForCausalLM.from_pretrained(MODEL_PATH)
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model = AutoModelForCausalLM.from_pretrained(MODEL_PATH).to(device)
 tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
 
 ds = load_dataset("OpenAssistant/oasst1")
@@ -45,7 +48,7 @@ def tokenize_data(examples):
         texts,
         truncation=True,
         max_length=256,
-        padding="longest",
+        padding="max_length",
         return_tensors="pt"
     )
     tokenized["labels"] = tokenized["input_ids"].clone()
@@ -66,10 +69,28 @@ lora_config = LoraConfig(
 
 model = get_peft_model(model, lora_config)
 
+def compute_metrics(eval_pred):
+    logits, labels = eval_pred
+    loss_fn = torch.nn.CrossEntropyLoss()
+
+    if isinstance(logits, tuple):
+        logits = logits[0]
+
+    logits = torch.tensor(logits)
+    labels = torch.tensor(labels)
+
+    logits = logits.view(-1, logits.shape[-1])
+    labels = labels.view(-1)
+
+    loss = loss_fn(logits, labels).item()
+    
+    return {"eval_loss": loss}
+
 training_args = TrainingArguments(
     output_dir=TEMP_PATH,
     per_device_train_batch_size=4,
     per_device_eval_batch_size=4,
+    gradient_accumulation_steps=2,
     num_train_epochs=2,
     save_steps=100,
     save_total_limit=2,
@@ -77,6 +98,7 @@ training_args = TrainingArguments(
     evaluation_strategy="epoch",
     save_strategy="epoch",
     load_best_model_at_end=True,
+    metric_for_best_model="eval_loss",
     remove_unused_columns=False
 )
 
@@ -85,7 +107,8 @@ trainer = Trainer(
     args=training_args,
     train_dataset=tokenized_train_ds,
     eval_dataset=tokenized_val_ds,
-    tokenizer=tokenizer
+    tokenizer=tokenizer,
+    compute_metrics=compute_metrics
 )
 
 trainer.train()
