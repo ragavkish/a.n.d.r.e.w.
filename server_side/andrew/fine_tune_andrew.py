@@ -11,6 +11,9 @@ from peft import LoraConfig, get_peft_model
 MODEL_PATH = "Z:/kizX/dataset/andrew/models/anderson"
 TEMP_PATH = "Z:/kizX/dataset/andrew/models/anderson_temp"
 
+torch.cuda.empty_cache()
+gc.collect()
+
 device = "cuda" if torch.cuda.is_available() else "cpu"
 model = AutoModelForCausalLM.from_pretrained(MODEL_PATH).to(device)
 tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
@@ -47,7 +50,7 @@ def tokenize_data(examples):
     tokenized = tokenizer(
         texts,
         truncation=True,
-        max_length=256,
+        max_length=128,
         padding="max_length",
         return_tensors="pt"
     )
@@ -71,14 +74,12 @@ model = get_peft_model(model, lora_config)
 
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
+
+    logits = torch.tensor(np.array(logits)).detach().cpu()
+    labels = torch.tensor(np.array(labels)).detach().cpu()
+
     loss_fn = torch.nn.CrossEntropyLoss()
-
-    if isinstance(logits, tuple):
-        logits = logits[0]
-
-    logits = torch.tensor(logits)
-    labels = torch.tensor(labels)
-
+    
     logits = logits.view(-1, logits.shape[-1])
     labels = labels.view(-1)
 
@@ -88,13 +89,13 @@ def compute_metrics(eval_pred):
 
 training_args = TrainingArguments(
     output_dir=TEMP_PATH,
-    per_device_train_batch_size=4,
-    per_device_eval_batch_size=4,
-    gradient_accumulation_steps=2,
+    per_device_train_batch_size=2,
+    per_device_eval_batch_size=2,
+    gradient_accumulation_steps=1,
     num_train_epochs=2,
-    save_steps=100,
-    save_total_limit=2,
-    logging_steps=50,
+    save_steps=500,
+    save_total_limit=1,
+    logging_steps=200,
     evaluation_strategy="epoch",
     save_strategy="epoch",
     load_best_model_at_end=True,
@@ -108,7 +109,8 @@ trainer = Trainer(
     train_dataset=tokenized_train_ds,
     eval_dataset=tokenized_val_ds,
     tokenizer=tokenizer,
-    compute_metrics=compute_metrics
+    compute_metrics=compute_metrics,
+    prediction_loss_only=True
 )
 
 trainer.train()
