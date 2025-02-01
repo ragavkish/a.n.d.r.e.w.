@@ -10,15 +10,14 @@ from peft import LoraConfig, get_peft_model
 
 MODEL_PATH = "Z:/kizX/dataset/andrew/models/anderson"
 TEMP_PATH = "Z:/kizX/dataset/andrew/models/anderson_temp"
-
-torch.cuda.empty_cache()
-gc.collect()
+CACHE_PATH = "Z:/kizX/dataset/andrew/cache"
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-model = AutoModelForCausalLM.from_pretrained(MODEL_PATH).to(device)
-tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
 
-ds = load_dataset("OpenAssistant/oasst1")
+model = AutoModelForCausalLM.from_pretrained(MODEL_PATH, cache_dir=CACHE_PATH).to(device)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, cache_dir=CACHE_PATH)
+
+ds = load_dataset("OpenAssistant/oasst1", cache_dir=CACHE_PATH)
 train_ds = ds["train"]
 val_ds = ds["validation"]
 
@@ -50,7 +49,7 @@ def tokenize_data(examples):
     tokenized = tokenizer(
         texts,
         truncation=True,
-        max_length=128,
+        max_length=512,
         padding="max_length",
         return_tensors="pt"
     )
@@ -67,6 +66,7 @@ lora_config = LoraConfig(
     r=8,
     lora_alpha=32,
     lora_dropout=0.1,
+    fan_in_fan_out=True,
     target_modules=["transformer.h.0.attn.c_attn", "transformer.h.0.attn.c_proj"],
 )
 
@@ -74,12 +74,14 @@ model = get_peft_model(model, lora_config)
 
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
-
-    logits = torch.tensor(np.array(logits)).detach().cpu()
-    labels = torch.tensor(np.array(labels)).detach().cpu()
-
     loss_fn = torch.nn.CrossEntropyLoss()
-    
+
+    if isinstance(logits, tuple):
+        logits = logits[0]
+
+    logits = torch.tensor(logits)
+    labels = torch.tensor(labels)
+
     logits = logits.view(-1, logits.shape[-1])
     labels = labels.view(-1)
 
@@ -89,18 +91,21 @@ def compute_metrics(eval_pred):
 
 training_args = TrainingArguments(
     output_dir=TEMP_PATH,
-    per_device_train_batch_size=2,
-    per_device_eval_batch_size=2,
-    gradient_accumulation_steps=1,
-    num_train_epochs=2,
+    overwrite_output_dir=True,
+    per_device_train_batch_size=4,
+    per_device_eval_batch_size=4,
+    gradient_accumulation_steps=4,
+    num_train_epochs=3,
     save_steps=500,
-    save_total_limit=1,
+    save_total_limit=2,
     logging_steps=200,
     evaluation_strategy="epoch",
     save_strategy="epoch",
     load_best_model_at_end=True,
     metric_for_best_model="eval_loss",
-    remove_unused_columns=False
+    remove_unused_columns=False,
+    fp16=True,
+    optim="adamw_torch",
 )
 
 trainer = Trainer(
@@ -108,9 +113,7 @@ trainer = Trainer(
     args=training_args,
     train_dataset=tokenized_train_ds,
     eval_dataset=tokenized_val_ds,
-    tokenizer=tokenizer,
-    compute_metrics=compute_metrics,
-    prediction_loss_only=True
+    compute_metrics=compute_metrics
 )
 
 trainer.train()
