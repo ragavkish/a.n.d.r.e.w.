@@ -1,6 +1,4 @@
 import torch
-import numpy as np
-import evaluate
 import gc
 import os
 import shutil
@@ -21,9 +19,14 @@ ds = load_dataset("OpenAssistant/oasst1", cache_dir=CACHE_PATH)
 train_ds = ds["train"]
 val_ds = ds["validation"]
 
-all_roles = set([example["role"] for example in train_ds])
-user_role = next((r for r in all_roles if "prompt" in r.lower()), "prompter")
-assistant_role = next((r for r in all_roles if "assistant" in r.lower()), "assistant")
+all_roles = set(example["role"] for example in train_ds)
+print(f"detected roles: {all_roles}")
+
+user_role = next((r for r in all_roles if "prompter" in r.lower() or "user" in r.lower()), None)
+assistant_role = next((r for r in all_roles if "assistant" in r.lower()), None)
+
+if not user_role or not assistant_role:
+    raise ValueError("role can't be determined; check dataset format!")
 
 def extract_conversations(dataset):
     conversations = []
@@ -42,7 +45,7 @@ formatted_train_ds = extract_conversations(train_ds)
 formatted_val_ds = extract_conversations(val_ds)
 
 if not formatted_train_ds or not formatted_val_ds:
-    raise ValueError("Extracted dataset is empty. Check role mapping and dataset structure.")
+    raise ValueError("void extracted dataset; check role mapping n dataset struct")
 
 def tokenize_data(examples):
     texts = [f"{p} {r}" for p, r in zip(examples["prompt"], examples["response"])]
@@ -60,27 +63,27 @@ tokenized_train_ds = formatted_train_ds.map(tokenize_data, batched=True, remove_
 tokenized_val_ds = formatted_val_ds.map(tokenize_data, batched=True, remove_columns=["prompt", "response"])
 
 if len(tokenized_train_ds) == 0 or len(tokenized_val_ds) == 0:
-    raise ValueError("Tokenized dataset is empty. Check the extraction and tokenization steps.")
+    raise ValueError("void tokenized dataset; check the extraction n tokenization steps!")
 
 lora_config = LoraConfig(
     r=8,
     lora_alpha=32,
     lora_dropout=0.1,
     fan_in_fan_out=True,
-    target_modules=["transformer.h.0.attn.c_attn", "transformer.h.0.attn.c_proj"],
+    target_modules=["c_attn", "c_proj", "c_fc"]
 )
 
 model = get_peft_model(model, lora_config)
 
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
-    loss_fn = torch.nn.CrossEntropyLoss()
+    loss_fn = torch.nn.CrossEntropyLoss(ignore_index=-100)
 
     if isinstance(logits, tuple):
         logits = logits[0]
 
-    logits = torch.tensor(logits)
-    labels = torch.tensor(labels)
+    logits = torch.tensor(logits, device="cuda") if torch.cuda.is_available() else torch.tensor(logits)
+    labels = torch.tensor(labels, device="cuda") if torch.cuda.is_available() else torch.tensor(labels)
 
     logits = logits.view(-1, logits.shape[-1])
     labels = labels.view(-1)
@@ -124,7 +127,11 @@ gc.collect()
 model.cpu()
 
 if os.path.exists(MODEL_PATH):
-    shutil.rmtree(MODEL_PATH)
+    backup_path = f"{MODEL_PATH}_backup"
+    if os.path.exists(backup_path):
+        shutil.rmtree(backup_path)
+    shutil.move(MODEL_PATH, backup_path)
+
 shutil.move(TEMP_PATH, MODEL_PATH)
 
-print(f"Fine-tuned model saved to {MODEL_PATH}")
+print(f"fine-tuned model @ {MODEL_PATH}")
