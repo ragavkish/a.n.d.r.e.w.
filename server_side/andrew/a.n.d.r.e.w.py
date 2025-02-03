@@ -1,7 +1,7 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
-MODEL_PATH = "Z:/kizX/dataset/andrew/models/anderson"
+MODEL_PATH = "Z:/kizX/dataset/andrew/models/mistral_finetuned"
 CACHE_PATH = "Z:/kizX/datasets/cache"
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, cache_dir=CACHE_PATH)
