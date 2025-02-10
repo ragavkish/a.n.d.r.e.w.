@@ -17,16 +17,30 @@ TEMP_PATH = "Z:/kizX/dataset/andrew/models/mistral_temp"
 BASE_MODEL = "mistralai/Mistral-7B-v0.1"
 LOCAL_MODEL_PATH = f"{CACHE_PATH}/models--mistralai--Mistral-7B-v0.1"
 USE_LOCAL_MODEL = os.path.exists(LOCAL_MODEL_PATH)
-
 model_name = LOCAL_MODEL_PATH if USE_LOCAL_MODEL else BASE_MODEL
 print(f"Loading model from: {model_name}")
 
-tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=CACHE_PATH)
-model = AutoModelForCausalLM.from_pretrained(model_name, cache_dir=CACHE_PATH, torch_dtype=torch.float16)
+os.makedirs(CACHE_PATH, exist_ok=True)
+os.makedirs(MODEL_PATH, exist_ok=True)
+
+try:
+    tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=CACHE_PATH, use_fast=False)
+except Exception as e:
+    print(f"Tokenizer error: {e}. Re-downloading...")
+    tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL, cache_dir=CACHE_PATH, force_download=True)
+
+try:
+    model = AutoModelForCausalLM.from_pretrained(model_name, cache_dir=CACHE_PATH, torch_dtype=torch.float16)
+except Exception as e:
+    print(f"Model error: {e}. Re-downloading...")
+    model = AutoModelForCausalLM.from_pretrained(BASE_MODEL, cache_dir=CACHE_PATH, torch_dtype=torch.float16, force_download=True)
+
 device = "cuda" if torch.cuda.is_available() else "cpu"
 model.to(device)
 
-dataset = load_dataset("your_dataset", cache_dir=CACHE_PATH)
+DATASET_NAME = "OpenAssistant/oasst1"
+print(f"Loading dataset: {DATASET_NAME}")
+dataset = load_dataset(DATASET_NAME, cache_dir=CACHE_PATH)
 
 def tokenize_function(examples):
     return tokenizer(examples["text"], padding="max_length", truncation=True, max_length=512)
@@ -52,40 +66,31 @@ trainer = Trainer(
     model=model,
     args=training_args,
     train_dataset=tokenized_datasets["train"],
-    eval_dataset=tokenized_datasets["test"],
+    eval_dataset=tokenized_datasets.get("test", None),
     tokenizer=tokenizer,
 )
 
 trainer.train()
-trainer.save_model("Z:/kizX/dataset/andrew/fine_tuned_model")
+trainer.save_model(MODEL_PATH)
 print("Standard fine-tuning completed and model saved!")
 
-ds = load_dataset("OpenAssistant/oasst1", cache_dir=CACHE_PATH)
-train_ds, val_ds = ds["train"], ds["validation"]
-
-all_roles = set(example["role"] for example in train_ds)
-user_role = next((r for r in all_roles if "prompter" in r.lower() or "user" in r.lower()), None)
-assistant_role = next((r for r in all_roles if "assistant" in r.lower()), None)
-
-if not user_role or not assistant_role:
-    raise ValueError("Role mapping failed. Check dataset format!")
+print("Loading OpenAssistant dataset for LoRA fine-tuning...")
+ds = load_dataset(DATASET_NAME, cache_dir=CACHE_PATH)
+train_ds, val_ds = ds["train"], ds.get("validation", None)
 
 def extract_conversations(dataset):
     conversations = []
     last_user_message = None
     for example in dataset:
-        if example["role"] == user_role:
+        if example["role"].lower() in ["prompter", "user"]:
             last_user_message = example["text"]
-        elif example["role"] == assistant_role and last_user_message:
+        elif example["role"].lower() == "assistant" and last_user_message:
             conversations.append({"prompt": last_user_message, "response": example["text"]})
             last_user_message = None
     return Dataset.from_list(conversations) if conversations else None
 
 formatted_train_ds = extract_conversations(train_ds)
-formatted_val_ds = extract_conversations(val_ds)
-
-if not formatted_train_ds or not formatted_val_ds:
-    raise ValueError("Extracted dataset is empty! Check dataset structure.")
+formatted_val_ds = extract_conversations(val_ds) if val_ds else None
 
 def tokenize_data(examples):
     texts = [f"{p} {r}" for p, r in zip(examples["prompt"], examples["response"])]
@@ -94,10 +99,7 @@ def tokenize_data(examples):
     return tokenized
 
 tokenized_train_ds = formatted_train_ds.map(tokenize_data, batched=True, remove_columns=["prompt", "response"])
-tokenized_val_ds = formatted_val_ds.map(tokenize_data, batched=True, remove_columns=["prompt", "response"])
-
-if len(tokenized_train_ds) == 0 or len(tokenized_val_ds) == 0:
-    raise ValueError("Tokenized dataset is empty! Check extraction & tokenization steps.")
+tokenized_val_ds = formatted_val_ds.map(tokenize_data, batched=True, remove_columns=["prompt", "response"]) if formatted_val_ds else None
 
 lora_config = LoraConfig(
     r=16,
@@ -111,14 +113,10 @@ model = get_peft_model(model, lora_config)
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
     loss_fn = torch.nn.CrossEntropyLoss(ignore_index=-100)
-    if isinstance(logits, tuple):
-        logits = logits[0]
-    logits = torch.tensor(logits, device=device)
-    labels = torch.tensor(labels, device=device)
+    logits, labels = torch.tensor(logits, device=device), torch.tensor(labels, device=device)
     logits = logits.view(-1, logits.shape[-1])
     labels = labels.view(-1)
-    loss = loss_fn(logits, labels).item()
-    return {"eval_loss": loss}
+    return {"eval_loss": loss_fn(logits, labels).item()}
 
 lora_training_args = TrainingArguments(
     output_dir=TEMP_PATH,
@@ -156,10 +154,7 @@ gc.collect()
 model.cpu()
 
 if os.path.exists(MODEL_PATH):
-    backup_path = f"{MODEL_PATH}_backup"
-    if os.path.exists(backup_path):
-        shutil.rmtree(backup_path)
-    shutil.move(MODEL_PATH, backup_path)
+    shutil.move(MODEL_PATH, f"{MODEL_PATH}_backup")
 
 shutil.move(TEMP_PATH, MODEL_PATH)
 print(f"LoRA fine-tuned Mistral-7B model saved at: {MODEL_PATH}")
