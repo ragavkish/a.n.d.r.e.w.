@@ -4,9 +4,19 @@ import torch
 MODEL_PATH = "Z:/kizX/dataset/andrew/models/mistral_finetuned"
 CACHE_PATH = "Z:/kizX/datasets/cache"
 
-tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, cache_dir=CACHE_PATH, trust_remote_code=True)
+tokenizer = AutoTokenizer.from_pretrained(
+    MODEL_PATH, 
+    cache_dir=CACHE_PATH, 
+    trust_remote_code=True,
+    use_fast=False
+)
+
 tokenizer.pad_token = tokenizer.eos_token
-model = AutoModelForCausalLM.from_pretrained(MODEL_PATH, cache_dir=CACHE_PATH)
+model = AutoModelForCausalLM.from_pretrained(
+    MODEL_PATH, 
+    cache_dir=CACHE_PATH, 
+    from_safetensors=True
+)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device).eval()
