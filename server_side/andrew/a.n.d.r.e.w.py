@@ -12,14 +12,16 @@ tokenizer = AutoTokenizer.from_pretrained(
 )
 
 tokenizer.pad_token = tokenizer.eos_token
+
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_PATH, 
-    cache_dir=CACHE_PATH, 
-    from_safetensors=True
+    cache_dir=CACHE_PATH,
+    low_cpu_mem_usage=True,
+    torch_dtype=torch.float16,
+    device_map="auto"
 )
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model.to(device).eval()
+model.eval()
 
 def chat():
     print("A.N.D.R.E.W. is online! Type 'exit' to stop.")
@@ -34,7 +36,7 @@ def chat():
         chat_history.append(user_input)
         input_text = "\n".join(chat_history[-5:])
 
-        input_ids = tokenizer.encode(input_text, return_tensors="pt").to(device)
+        input_ids = tokenizer.encode(input_text, return_tensors="pt").to(model.device)
 
         with torch.no_grad():
             output = model.generate(
