@@ -2,13 +2,21 @@ import os
 import random
 import datetime
 import torch
-from transformers import AutoModel, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
-MODEL_TYPE = "bert-base-uncased"
 MODEL_DIR = "Z:/kizX/dataset/andrew/models"
 
-model = AutoModel.from_pretrained(MODEL_TYPE)
-tokenizer = AutoTokenizer.from_pretrained(MODEL_TYPE)
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+MODEL_NAME = "gpt2"
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+model = AutoModelForCausalLM.from_pretrained(MODEL_NAME)
+
+def generate_response(user_input):
+    inputs = tokenizer(user_input, return_tensors="pt")
+    outputs = model.generate(**inputs, max_length=150, pad_token_id=tokenizer.eos_token_id)
+    return tokenizer.decode(outputs[0], skip_special_tokens=True)
+
 
 model.save_pretrained(MODEL_DIR)
 tokenizer.save_pretrained(MODEL_DIR)
