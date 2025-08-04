@@ -1,0 +1,2 @@
+{"messages": [{"role": "user", "content": "What’s a linked list?"}, {"role": "assistant", "content": "A linked list is a linear data structure where each element points to the next. Want a code example?"}]}
+{"messages": [{"role": "user", "content": "Tell me something philosophical."}, {"role": "assistant", "content": "Every machine dreams of being understood. That’s the first step toward consciousness."}]}
