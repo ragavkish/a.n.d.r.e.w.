@@ -19,9 +19,10 @@ def load_memory(path="memory.json"):
         return {}
 
 def build_system_prompt(mode="default"):
-    persona = load_file("priming/persona.txt")
+    persona = load_file("0master_/priming/persona.txt")
     memory = load_memory()
-    few_shot = load_jsonl("priming/few_shot.jsonl")
+    few_shot = load_jsonl("0master_/priming/few_shot.jsonl")
+
 
     memory_text = "\n".join(f"- {k}: {v}" for k, v in memory.items())
     mode_text = load_file(f"modes/{mode}.txt") if mode != "default" else ""
